@@ -8,12 +8,13 @@ import time
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-import telegram_send
+from telegram_sender import Sender
 
-USERNAME = "E-MAIL" #YOUR-EMAIL
+TOKEN = "TOKEN" #Your token that you got the BotFather
+USERNAME = "YOUR-EMAIL" #YOUR-EMAIL
 PASSWORD = "YOUR-PASSWORD" #YOUR-PASSWORD
 numberOfConsec = 3 #Number of consecutive
-ratio = 3.0 #Trigger ratio. Ex: (Bets below 2.00x.)
+ratio = 2.0 #Trigger ratio. Ex: (Bets below 2.00x.)
 url = "https://www.maxbet.rs/ibet-web-client/#/home/game/spribe/aviator"
 
 
@@ -34,8 +35,6 @@ def login():
             print("Logging successfuly.")
         except:
             print("Login attempt failed. I'm trying again.")
-            driver.refresh()
-            time.sleep(5)
         
 def iframe():
     iframe_flag = False
@@ -47,9 +46,6 @@ def iframe():
             button.click()
             iframe_flag = True
         except:
-            print("Iframe problem..")
-            driver.refresh()
-            time.sleep(4)
             pass
     
 
@@ -77,7 +73,8 @@ def checkTrigger(rates,numberOfConsec, ratio):
     
 def send_msg(rates, numberOfConsec):
     try:
-        telegram_send.send(messages = [f"<b>!Alert</b> Aviator has {numberOfConsec} blue in a row." , f"Last {len(rates)} round: " +  ", ".join([f"{rate}x" for rate in rates ])]  , parse_mode="html")
+        sender.send_msg(f"!Alert Aviator has {numberOfConsec} blue in a row.")
+        sender.send_msg(f"Last {len(rates)} round: " +  ", ".join([f"{rate}x" for rate in rates ]))
     except: 
         print("Message service has a problem. Check your tokens")
     
@@ -86,10 +83,11 @@ print("Welcome to Aviator Tracker Bot..")
 options = webdriver.ChromeOptions()
 options.add_argument("--log-level=3")
 driver = webdriver.Chrome(options=options)
+sender = Sender(TOKEN)
 driver.get(url)
 time.sleep(10)
 login()
-time.sleep(10)
+time.sleep(1)
 iframe()
 time.sleep(1)
 old_rates = []
@@ -104,7 +102,7 @@ while True:
         time.sleep(3)
         old_rates = rates
     except:
-        prin("Main problem")
+        pass
     
 
 
