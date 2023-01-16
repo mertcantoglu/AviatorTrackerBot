@@ -17,7 +17,6 @@ numberOfConsec = 3 #Number of consecutive
 ratio = 2.0 #Trigger ratio. Ex: (Bets below 2.00x.)
 url = "https://www.maxbet.rs/ibet-web-client/#/home/game/spribe/aviator"
 
-
 def login():
     login_flag = False
     while(not login_flag):
@@ -64,11 +63,14 @@ def get_blocks():
             pass
     
     
-def checkTrigger(rates,numberOfConsec, ratio):
+def checkTrigger(rates, ratio):
     string = "".join(["Y" if rate < ratio else "N" for rate in rates ])
-    if "Y"*numberOfConsec in string:
-        return True
-    else: return False
+    counter = 0
+    for i in string:
+        if i == "Y":
+            counter+=1
+        else: break
+    return counter
     
     
 def send_msg(rates, numberOfConsec):
@@ -96,13 +98,15 @@ while True:
         rates = get_blocks()
         if old_rates != rates:
             print(f"Last {len(rates)} round: " +  ", ".join([f"{rate}x" for rate in rates ]))
-            if checkTrigger(rates,numberOfConsec,ratio):
-                print(f"!Alert Aviator has {numberOfConsec} blue in a row. Message sending via Telegram.")
-                send_msg(rates,numberOfConsec)
+            count= checkTrigger(rates,ratio)
+            if count >= numberOfConsec:
+                print(f"!Alert Aviator has {count} blue in a row. Message sending via Telegram.")
+                send_msg(rates,count)
         time.sleep(3)
         old_rates = rates
     except:
         pass
     
+
 
 
