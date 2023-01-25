@@ -10,7 +10,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from telegram_sender import Sender
 
-TOKEN = "TOKEN" #Your token that you got the BotFather
+TOKEN = "YOUR-TOKEN-HERE" #Your token that you got the BotFather
 USERNAME = "YOUR-EMAIL" #YOUR-EMAIL
 PASSWORD = "YOUR-PASSWORD" #YOUR-PASSWORD
 numberOfConsec = 3 #Number of consecutive
@@ -18,9 +18,9 @@ ratio = 2.0 #Trigger ratio. Ex: (Bets below 2.00x.)
 url = "https://www.maxbet.rs/ibet-web-client/#/home/game/spribe/aviator"
 
 def login():
-    login_flag = False
-    while(not login_flag):
+    while(not checkLogin()):
         try:
+            driver.switch_to.default_content()
             log_but = driver.find_element_by_xpath('//*[@id="app-loaded"]/div[3]/div[3]/div[1]/div[1]/div[1]/div[1]/input').click()
             time.sleep(1)
             mail = driver.find_element_by_xpath('//*[@id="app-loaded"]/div[3]/div[3]/div[1]/div[1]/div[1]/div[1]/div/form/input[1]')
@@ -30,11 +30,19 @@ def login():
             password.send_keys(PASSWORD)
             log_but = driver.find_element_by_xpath('//*[@id="app-loaded"]/div[3]/div[3]/div[1]/div[1]/div[1]/div[1]/div/form/input[4]').click()
             time.sleep(10)
-            login_flag=True
-            print("Logging successfuly.")
+            login_flag=checkLogin()
         except:
             print("Login attempt failed. I'm trying again.")
-        
+    print("Logging successfuly.")    
+    
+def checkLogin():
+    driver.switch_to.default_content()
+    username = driver.find_elements_by_class_name("profile-and-gifts-wrapper")
+    if len(username) > 0 and username[0].text:
+        return True
+    else: return False
+    
+    
 def iframe():
     iframe_flag = False
     while(not iframe_flag):
@@ -80,6 +88,9 @@ def send_msg(rates, numberOfConsec):
     except: 
         print("Message service has a problem. Check your tokens")
     
+    
+    # <span ng-if="profileInfo.config != 'ug'" class="ng-binding ng-scope">mert</span>
+    # //*[@id="app-loaded"]/div[3]/div[3]/div[1]/div[2]/div[1]/div/div[1]/div[2]/span
 
 print("Welcome to Aviator Tracker Bot..")
 options = webdriver.ChromeOptions()
@@ -95,15 +106,21 @@ time.sleep(1)
 old_rates = []
 while True:
     try:
-        rates = get_blocks()
-        if old_rates != rates:
-            print(f"Last {len(rates)} round: " +  ", ".join([f"{rate}x" for rate in rates ]))
-            count= checkTrigger(rates,ratio)
-            if count >= numberOfConsec:
-                print(f"!Alert Aviator has {count} blue in a row. Message sending via Telegram.")
-                send_msg(rates,count)
-        time.sleep(3)
-        old_rates = rates
+        if checkLogin():
+            iframe()
+            rates = get_blocks()
+            if old_rates != rates:
+                print(f"Last {len(rates)} round: " +  ", ".join([f"{rate}x" for rate in rates ]))
+                count= checkTrigger(rates,ratio)
+                if count >= numberOfConsec:
+                    print(f"!Alert Aviator has {count} blue in a row. Message sending via Telegram.")
+                    send_msg(rates,count)
+            time.sleep(3)
+            old_rates = rates
+        else:
+            driver.refresh()
+            time.sleep(3)
+            login()
     except:
         pass
     
